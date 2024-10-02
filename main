@@ -1,0 +1,396 @@
+import tkinter as tk
+from tkinter import messagebox
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+# Function to provide suggestions based on BMI category
+def provide_suggestions(bmi_category):
+    suggestions = {
+        'Underweight': {
+            'Nutrition': [
+                'Increase caloric intake with nutrient-dense foods.',
+                'Include protein-rich foods like lean meats, eggs, and legumes.',
+                'Add healthy fats from sources like avocados, nuts, and olive oil.',
+                'Consume complex carbohydrates such as whole grains and starchy vegetables.',
+                'Incorporate smoothies and shakes with added protein and calories.',
+                'Eat frequently, aiming for 5-6 small meals throughout the day.',
+                'Drink high-calorie beverages like milk and 100% fruit juices.'
+            ],
+            'Foods': [
+                'Whole grain cereals like oats and quinoa.',
+                'Lean meats and fish.',
+                'Nuts and seeds such as almonds and chia seeds.',
+                'Dairy products or alternatives like Greek yogurt and cheese.',
+                'Nut butters like peanut butter and almond butter.',
+                'Starchy vegetables such as potatoes and sweet potatoes.',
+                'Legumes like lentils and chickpeas.',
+                'Healthy oils like olive oil and coconut oil.',
+                'Eggs as a versatile source of protein.',
+                'Protein shakes with added protein powder.'
+            ],
+            'Exercise': [
+                'Focus on strength training to build muscle mass (e.g., weightlifting).',
+                'Incorporate resistance exercises (e.g., squats, lunges).',
+                'Use bodyweight exercises (e.g., push-ups, pull-ups).',
+                'Engage in moderate cardio to stimulate appetite (e.g., brisk walking).',
+                'Perform flexibility exercises to prevent injury (e.g., stretching).',
+                'Include high-calorie burning workouts with short bursts of intense activity (e.g., HIIT).',
+                'Consider working with a personal trainer for tailored guidance.'
+            ],
+            'Yoga': [
+                'Practice poses to improve strength and balance (e.g., Warrior poses, Chair pose).',
+                'Include restorative poses to help recovery (e.g., Child’s pose, Legs up the Wall).',
+                'Incorporate poses that stimulate appetite (e.g., Bow pose).',
+                'Include poses that enhance digestion (e.g., Seated Forward Bend).',
+                'Practice mindfulness and relaxation techniques.'
+            ],
+            'Vitamins': [
+                'Vitamin D for bone health.',
+                'B-complex vitamins for energy metabolism.',
+                'Vitamin A for immune support.',
+                'Vitamin C for overall health and healing.',
+                'Vitamin E for antioxidant benefits.',
+                'Iron for energy and oxygen transport.',
+                'Zinc for immune function and wound healing.',
+                'Calcium for bone health.',
+                'Omega-3 fatty acids for overall health.',
+                'Multivitamins to cover general nutrient needs.'
+            ]
+        },
+        'Normal weight': {
+            'Nutrition': [
+                'Maintain a balanced diet with a variety of foods.',
+                'Ensure adequate intake of fruits and vegetables.',
+                'Include lean proteins and whole grains.',
+                'Hydrate well with water and herbal teas.',
+                'Monitor portion sizes to maintain weight.',
+                'Consume a variety of proteins including plant-based options.',
+                'Limit intake of processed foods and sugars.'
+            ],
+            'Foods': [
+                'Fresh fruits and vegetables.',
+                'Whole grains like quinoa and brown rice.',
+                'Lean proteins such as chicken and tofu.',
+                'Healthy fats from nuts and olive oil.',
+                'Low-fat dairy or dairy alternatives.',
+                'Legumes like beans and lentils.',
+                'Herbs and spices for added flavor.',
+                'Whole grain breads and cereals.',
+                'Nuts and seeds for snacks.',
+                'Lean fish and seafood.'
+            ],
+            'Exercise': [
+                'Engage in regular aerobic exercise (e.g., jogging, cycling).',
+                'Incorporate strength training exercises (e.g., free weights, machines).',
+                'Include flexibility and stretching routines.',
+                'Practice activities for cardiovascular health (e.g., swimming).',
+                'Consider recreational sports or activities (e.g., tennis).',
+                'Engage in core workouts to strengthen abdominal muscles.',
+                'Incorporate balance exercises for overall stability.'
+            ],
+            'Yoga': [
+                'Focus on balanced and flowing sequences (e.g., Vinyasa).',
+                'Incorporate poses for strength and flexibility (e.g., Plank, Downward Dog).',
+                'Practice relaxation techniques (e.g., Savasana).',
+                'Include poses that improve core stability (e.g., Boat pose).',
+                'Use yoga to complement other forms of exercise.'
+            ],
+            'Vitamins': [
+                'Vitamin D for bone health.',
+                'Omega-3 fatty acids for heart health.',
+                'Magnesium for muscle function.',
+                'Vitamin C for immunity.',
+                'Multivitamins to cover general health needs.',
+                'Vitamin B12 for energy.',
+                'Calcium for bone strength.',
+                'Vitamin A for vision health.',
+                'Vitamin E for antioxidant support.',
+                'Iron for blood health.'
+            ]
+        },
+        'Overweight': {
+            'Nutrition': [
+                'Reduce calorie intake with a focus on portion control.',
+                'Increase fiber intake with fruits, vegetables, and whole grains.',
+                'Limit intake of added sugars and processed foods.',
+                'Choose lean proteins and low-fat dairy products.',
+                'Stay hydrated and avoid sugary drinks.',
+                'Monitor and reduce portion sizes.',
+                'Incorporate low-calorie, nutrient-dense foods.'
+            ],
+            'Foods': [
+                'Vegetables with high water content.',
+                'Whole grains like oats and barley.',
+                'Lean proteins such as fish and beans.',
+                'Low-fat dairy or alternatives.',
+                'Fruits in moderation.',
+                'Nuts and seeds in moderation.',
+                'Healthy oils in small amounts.',
+                'Legumes for added fiber.',
+                'Whole grain breads and cereals.',
+                'Herbs and spices for flavor without calories.'
+            ],
+            'Exercise': [
+                'Include regular aerobic exercise (e.g., walking, swimming).',
+                'Combine with strength training (e.g., weight machines, bodyweight exercises).',
+                'Add interval training to boost metabolism.',
+                'Incorporate flexibility and stretching exercises.',
+                'Engage in activities that you enjoy to maintain consistency.',
+                'Monitor progress and adjust workouts as needed.',
+                'Consider working with a fitness professional for personalized guidance.'
+            ],
+            'Yoga': [
+                'Practice poses that enhance cardiovascular health (e.g., Sun Salutations).',
+                'Include poses that build strength (e.g., Warrior poses).',
+                'Focus on balance and stability (e.g., Tree pose).',
+                'Use restorative poses to manage stress (e.g., Legs up the Wall).',
+                'Incorporate breathing exercises to aid relaxation.'
+            ],
+            'Vitamins': [
+                'Vitamin D to support metabolism.',
+                'B-complex vitamins for energy and fat metabolism.',
+                'Calcium for bone health.',
+                'Omega-3 fatty acids for inflammation control.',
+                'Antioxidants like Vitamin C to support overall health.',
+                'Magnesium for metabolic function.',
+                'Fiber supplements to aid digestion.',
+                'Vitamin E for cellular health.',
+                'Zinc for immune function.',
+                'Multivitamins to ensure nutrient coverage.'
+            ]
+        },
+        'Obesity': {
+            'Nutrition': [
+                'Adopt a reduced-calorie, nutrient-dense diet.',
+                'Focus on high-fiber foods to promote satiety.',
+                'Limit intake of high-calorie, low-nutrient foods.',
+                'Monitor and control portion sizes.',
+                'Include a variety of vegetables and lean proteins.',
+                'Reduce consumption of processed and sugary foods.',
+                'Stay hydrated and choose water over high-calorie drinks.'
+            ],
+            'Foods': [
+                'Leafy greens and non-starchy vegetables.',
+                'Lean meats and fish.',
+                'Whole grains and legumes.',
+                'Low-fat or non-fat dairy products.',
+                'Fresh fruits in moderation.',
+                'Nuts and seeds in small amounts.',
+                'Healthy oils like olive oil.',
+                'Herbs and spices for added flavor.',
+                'Legumes for fiber and protein.',
+                'Vegetable-based soups and stews.'
+            ],
+            'Exercise': [
+                'Engage in low-impact cardiovascular activities (e.g., walking, swimming).',
+                'Incorporate strength training with light weights or resistance bands.',
+                'Include high-intensity interval training (HIIT) for improved metabolism.',
+                'Add flexibility and stretching exercises.',
+                'Aim for at least 150 minutes of moderate exercise weekly.',
+                'Include functional movements to improve daily function.',
+                'Consider professional guidance for a tailored fitness plan.'
+            ],
+            'Yoga': [
+                'Practice low-impact sequences and poses (e.g., gentle Vinyasa).',
+                'Incorporate poses that build strength and balance (e.g., Warrior poses).',
+                'Use restorative poses to support recovery (e.g., Child’s pose).',
+                'Include poses that aid digestion and metabolic health (e.g., Seated Forward Bend).',
+                'Practice mindful breathing and relaxation techniques.'
+            ],
+            'Vitamins': [
+                'Vitamin D to support weight management.',
+                'B-complex vitamins for energy and metabolic support.',
+                'Omega-3 fatty acids to reduce inflammation.',
+                'Magnesium for metabolic function and muscle health.',
+                'Calcium for bone strength.',
+                'Vitamin C to enhance overall health and immunity.',
+                'Fiber supplements to support digestion.',
+                'Zinc for immune function.',
+                'Vitamin E for antioxidant protection.',
+                'Multivitamins to ensure overall nutrient intake.'
+            ]
+        }
+    }
+    print(f"Looking for suggestions for category: {bmi_category}")  # Debugging print statement
+    return suggestions[bmi_category]
+
+# Load and prepare the dataset
+def load_and_train_model():
+    try:
+        # Load the dataset
+        file_path = 'C:\\Users\\Rohan\\Downloads\\children_data.csv'  # Ensure this path is correct
+        df = pd.read_csv(file_path)
+
+        # Drop the Name column as it's not needed for prediction
+        df_cleaned = df.drop(columns=['Name'])
+
+        # Features and target variable
+        X = df_cleaned.drop(columns=['BMI'])
+        y = df_cleaned['BMI']
+
+        # Split the data into training and testing sets (80% train, 20% test)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+        # Normalize the features (Height and Weight)
+        scaler = StandardScaler()
+        X_train_scaled = scaler.fit_transform(X_train)
+        X_test_scaled = scaler.transform(X_test)
+
+        # Train a linear regression model
+        model = LinearRegression()
+        model.fit(X_train_scaled, y_train)
+
+        return scaler, model
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred while loading and training the model: {e}")
+        return None, None
+
+# Function to predict BMI, provide suggestions, and generate a pie chart
+def predict_bmi_and_visualize(age, height_cm, weight_kg, scaler, model):
+    try:
+        # Prepare the input data
+        input_data = pd.DataFrame([[age, height_cm, weight_kg]], columns=['Age', 'Height (cm)', 'Weight (kg)'])
+
+        # Normalize the input data
+        input_data_scaled = scaler.transform(input_data)
+
+        # Predict BMI
+        predicted_bmi = model.predict(input_data_scaled)[0]
+
+        # Determine BMI category
+        if predicted_bmi < 18.5:
+            category = "Underweight"
+            color = 'skyblue'
+        elif 18.5 <= predicted_bmi < 24.9:
+            category = "Normal weight"
+            color = 'green'
+        elif 25 <= predicted_bmi < 29.9:
+            category = "Overweight"
+            color = 'orange'
+        else:
+            category = "Obesity"
+            color = 'red'
+
+        # Get suggestions
+        suggestions = provide_suggestions(category)
+
+        # Generate the pie chart
+        fig, ax = plt.subplots(figsize=(4, 4))
+        sizes = [predicted_bmi, max(40 - predicted_bmi, 0)]  # Adjust sizes for visualization
+        colors = [color, 'lightgrey']
+        ax.pie([sizes[0], sizes[1]], colors=colors, startangle=90, radius=1.5, counterclock=False, wedgeprops=dict(width=0.3))
+        ax.text(0, 0, f'{category}\nBMI: {predicted_bmi:.2f}', ha='center', va='center', fontsize=12)
+        ax.set(aspect="equal")
+
+        return predicted_bmi, category, suggestions, fig
+    except Exception as e:
+        messagebox.showerror("Error", f"An error occurred during prediction: {e}")
+        return None, None, None, None
+
+# Function to calculate BMI and update the GUI
+def calculate_bmi():
+    try:
+        age = int(entry_age.get())
+        height = float(entry_height.get())
+        weight = float(entry_weight.get())
+
+        bmi, category, suggestions, fig = predict_bmi_and_visualize(age, height, weight, scaler, model)
+
+        if bmi is not None:
+            result_text.set(f'BMI: {bmi:.2f}\nCategory: {category}')
+
+            nutrition_text.set("\n".join(suggestions['Nutrition']))
+            foods_text.set("\n".join(suggestions['Foods']))
+            exercise_text.set("\n".join(suggestions['Exercise']))
+            yoga_text.set("\n".join(suggestions['Yoga']))
+            vitamins_text.set("\n".join(suggestions['Vitamins']))
+
+            # Clear previous chart
+            for widget in frame_chart.winfo_children():
+                widget.destroy()
+
+            # Display the new chart
+            canvas = FigureCanvasTkAgg(fig, master=frame_chart)
+            canvas.draw()
+            canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+    except ValueError:
+        messagebox.showerror("Input Error", "Please enter valid numeric values for age, height, and weight.")
+    except Exception as e:
+        messagebox.showerror("Error", f"An unexpected error occurred: {e}")
+
+# Load and train the model before launching the GUI
+scaler, model = load_and_train_model()
+
+if scaler is not None and model is not None:
+    # Setup the GUI
+    root = tk.Tk()
+    root.title("BMI Prediction Interface")
+
+    frame_input = tk.Frame(root)
+    frame_input.pack(pady=10)
+
+    label_age = tk.Label(frame_input, text="Age:")
+    label_age.grid(row=0, column=0, padx=5, pady=5)
+    entry_age = tk.Entry(frame_input)
+    entry_age.grid(row=0, column=1, padx=5, pady=5)
+
+    label_height = tk.Label(frame_input, text="Height (cm):")
+    label_height.grid(row=1, column=0, padx=5, pady=5)
+    entry_height = tk.Entry(frame_input)
+    entry_height.grid(row=1, column=1, padx=5, pady=5)
+
+    label_weight = tk.Label(frame_input, text="Weight (kg):")
+    label_weight.grid(row=2, column=0, padx=5, pady=5)
+    entry_weight = tk.Entry(frame_input)
+    entry_weight.grid(row=2, column=1, padx=5, pady=5)
+
+    button_calculate = tk.Button(frame_input, text="Calculate BMI", command=calculate_bmi)
+    button_calculate.grid(row=3, columnspan=2, pady=10)
+
+    result_text = tk.StringVar()
+    label_result = tk.Label(root, textvariable=result_text, font=('Arial', 14))
+    label_result.pack(pady=10)
+
+    frame_suggestions = tk.Frame(root)
+    frame_suggestions.pack(pady=10)
+
+    nutrition_text = tk.StringVar()
+    label_nutrition = tk.Label(frame_suggestions, text="Nutrition Suggestions:", font=('Arial', 12, 'bold'))
+    label_nutrition.pack(anchor='w')
+    label_nutrition_val = tk.Label(frame_suggestions, textvariable=nutrition_text, wraplength=400, justify='left')
+    label_nutrition_val.pack(anchor='w')
+
+    foods_text = tk.StringVar()
+    label_foods = tk.Label(frame_suggestions, text="Foods:", font=('Arial', 12, 'bold'))
+    label_foods.pack(anchor='w')
+    label_foods_val = tk.Label(frame_suggestions, textvariable=foods_text, wraplength=400, justify='left')
+    label_foods_val.pack(anchor='w')
+
+    exercise_text = tk.StringVar()
+    label_exercise = tk.Label(frame_suggestions, text="Exercise:", font=('Arial', 12, 'bold'))
+    label_exercise.pack(anchor='w')
+    label_exercise_val = tk.Label(frame_suggestions, textvariable=exercise_text, wraplength=400, justify='left')
+    label_exercise_val.pack(anchor='w')
+
+    yoga_text = tk.StringVar()
+    label_yoga = tk.Label(frame_suggestions, text="Yoga:", font=('Arial', 12, 'bold'))
+    label_yoga.pack(anchor='w')
+    label_yoga_val = tk.Label(frame_suggestions, textvariable=yoga_text, wraplength=400, justify='left')
+    label_yoga_val.pack(anchor='w')
+
+    vitamins_text = tk.StringVar()
+    label_vitamins = tk.Label(frame_suggestions, text="Vitamins:", font=('Arial', 12, 'bold'))
+    label_vitamins.pack(anchor='w')
+    label_vitamins_val = tk.Label(frame_suggestions, textvariable=vitamins_text, wraplength=400, justify='left')
+    label_vitamins_val.pack(anchor='w')
+
+    frame_chart = tk.Frame(root)
+    frame_chart.pack(pady=20)
+
+    root.mainloop()
+else:
+    print("Failed to load and train the model. Please check the dataset and try again.")
